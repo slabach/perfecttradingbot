@@ -21,10 +21,15 @@ var (
 		"SNAP": true,
 		"TSLY": true,
 		"SOFI": true,
+		"SOXS": true,
+		"RIVN": true,
+		"LCID": true,
+		"MSTU": true,
+		"SPXS": true,
 	}
 	InitialBalance    = 1500.0
 	TradeFundPercent  = 0.95
-	UseLive           bool
+	UseLive           = false
 	CashBalance       float64
 	TotalProfitLoss   float64
 	Positions         = make(map[string]types.Position)

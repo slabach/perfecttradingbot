@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"log"
 	"os"
@@ -52,6 +53,7 @@ func main() {
 	global.InitialBalance, _ = strconv.ParseFloat(account.BuyingPower.String(), 64)
 
 	global.Symbols = broker.FetchSymbols(global.AlpacaClient, global.MarketClient, global.UseLive, global.IgnoreSymbols)
+	fmt.Println(global.Symbols)
 	if len(global.Symbols) == 0 {
 		log.Fatal("No symbols found for today's trading criteria")
 	}
@@ -78,12 +80,12 @@ func main() {
 		log.Fatalf("failed to subscribe to bars: %v", err)
 	}
 
-	err = ws.SubscribeToTrades(func(trade stream.Trade) {
-		broker.HandleTrade(trade)
-	}, global.Symbols...)
-	if err != nil {
-		log.Fatalf("failed to subscribe to bars: %v", err)
-	}
+	//err = ws.SubscribeToTrades(func(trade stream.Trade) {
+	//	broker.HandleTrade(trade)
+	//}, global.Symbols...)
+	//if err != nil {
+	//	log.Fatalf("failed to subscribe to bars: %v", err)
+	//}
 
 	log.Printf("Subscribed to: %v\n", global.Symbols)
 
@@ -119,6 +121,7 @@ func initConfig() {
 	global.RsiMax, _ = strconv.ParseFloat(os.Getenv("RSI_MAX"), 64)
 	global.RequireTrend = os.Getenv("REQUIRE_TREND") == "true"
 	global.UseRSIFilter = os.Getenv("USE_RSI_FILTER") == "true"
+	//global.UseLive = os.Getenv("LIVE_TRADING") == "false"
 }
 
 func initAlpacaClient() {

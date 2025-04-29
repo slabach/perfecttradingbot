@@ -48,7 +48,7 @@ func FetchSymbols(alpacaClient *alpaca.Client, marketClient *marketdata.Client, 
 			last := snapshot.LatestTrade.Price
 			vol := snapshot.DailyBar.Volume
 
-			if last >= 0.1 && last <= 20.0 && vol >= 100000 && snapshot.PrevDailyBar != nil {
+			if last >= 0.2 && last <= 15.0 && vol >= 500000 && snapshot.PrevDailyBar != nil {
 				result = append(result, sym)
 			}
 
