@@ -59,55 +59,60 @@ func main() {
 	for tick := range ticks {
 		if s.ShouldTrade(tick) && riskManager.AllowsTrade() {
 			order := s.GenerateOrder(tick)
-			err := execution.SubmitOrder(order)
+			mainOrderId, err := execution.SubmitOrder(order)
 			if err != nil {
 				log.Printf("Failed to submit order: %v", err)
 				continue
 			}
 
-			var stopOrderId, targetOrderId int
+			var stopOrderId, targetOrderId *int
 			// submit attached stop-loss if defined
-			if order.StopPrice > 0 {
-				stopOrder := types.Order{
-					Side:      1, // SELL
-					Type:      4, // STOP
-					Qty:       order.Qty,
-					StopPrice: order.StopPrice,
-					CustomTag: "stop-loss",
+			if order.StopPrice != nil {
+				if *order.StopPrice > 0 {
+					stopOrder := types.Order{
+						Side:          1, // SELL
+						Type:          4, // STOP
+						Qty:           order.Qty,
+						StopPrice:     order.StopPrice,
+						CustomTag:     "stop-loss",
+						LinkedOrderID: mainOrderId,
+					}
+					stopOrderId, err = execution.SubmitOrder(stopOrder)
+					if err != nil {
+						fmt.Printf("Failed to submit target order: %v", err)
+					}
+					stopOrder.ID = *stopOrderId
 				}
-				stopOrderId = execution.SubmitAndReturnID(stopOrder)
-				if stopOrderId == 0 {
-					fmt.Printf("Failed to submit target order: %v", err)
-				}
-				stopOrder.ID = stopOrderId
 			}
 
 			// submit attached take-profit if defined
-			if order.TargetPrice > 0 {
-				targetOrder := types.Order{
-					Side:      1, // SELL
-					Type:      1, // LIMIT
-					Qty:       order.Qty,
-					Price:     order.TargetPrice,
-					TIF:       "GTC",
-					CustomTag: "take-profit",
+			if order.TargetPrice != nil {
+				if *order.TargetPrice > 0 {
+					targetOrder := types.Order{
+						Side:          1, // SELL
+						Type:          1, // LIMIT
+						Qty:           order.Qty,
+						TargetPrice:   order.TargetPrice,
+						CustomTag:     "take-profit",
+						LinkedOrderID: mainOrderId,
+					}
+					targetOrderId, err = execution.SubmitOrder(targetOrder)
+					if err != nil {
+						fmt.Printf("Failed to submit target order: %v", err)
+					}
+					targetOrder.ID = *targetOrderId
 				}
-				targetOrderId = execution.SubmitAndReturnID(targetOrder)
-				if targetOrderId == 0 {
-					fmt.Printf("Failed to submit target order: %v", err)
-				}
-				targetOrder.ID = targetOrderId
 			}
 
 			// monitor for order fulfillment
 			go func() {
 				filled := execution.WaitForFill(order)
 				if filled != nil {
-					if stopOrderId > 0 {
-						execution.CancelOrder(stopOrderId)
+					if *stopOrderId > 0 {
+						execution.CancelOrder(*stopOrderId)
 					}
-					if targetOrderId > 0 {
-						execution.CancelOrder(targetOrderId)
+					if *targetOrderId > 0 {
+						execution.CancelOrder(*targetOrderId)
 					}
 				}
 			}()

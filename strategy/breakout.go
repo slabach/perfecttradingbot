@@ -33,8 +33,8 @@ func (s *BreakoutStrategy) GenerateOrder(tick types.TickData) types.Order {
 	return types.Order{
 		Side:        0, // BUY
 		Qty:         5,
-		StopPrice:   stop,
-		TargetPrice: target,
+		StopPrice:   &stop,
+		TargetPrice: &target,
 		Type:        2, // MARKET
 		CustomTag:   "Order-Placed",
 	}

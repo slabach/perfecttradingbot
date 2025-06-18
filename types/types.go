@@ -16,16 +16,17 @@ type TickData struct {
 }
 
 type Order struct {
-	ID          int
-	Symbol      string
-	Side        int // "buy" = 0 or "sell" = 1
-	Type        int // "market" = 2, "limit" = 1, "stopLimit" = 4, etc.
-	Price       float64
-	StopPrice   float64
-	Qty         int
-	TIF         string // Time in force, e.g., "GTC", "IOC"
-	TargetPrice float64
-	CustomTag   string
+	ID            int
+	Symbol        string
+	Side          int // "buy" = 0 or "sell" = 1
+	Type          int // "market" = 2, "limit" = 1, "stopLimit" = 4, etc.
+	Price         float64
+	StopPrice     *float64
+	Qty           int
+	TIF           string // Time in force, e.g., "GTC", "IOC"
+	TargetPrice   *float64
+	CustomTag     string
+	LinkedOrderID *int
 }
 
 type Bar struct {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -39,99 +38,59 @@ type placeOrderResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
-func SubmitOrder(order types.Order) error {
+func SubmitOrder(order types.Order) (*int, error) {
 	accountIDStr := os.Getenv("PROJECTX_ACCOUNT_ID")
 	token := os.Getenv("PROJECTX_SESSION_TOKEN")
 	if accountIDStr == "" || token == "" {
-		return fmt.Errorf("missing account ID or auth token")
+		return nil, fmt.Errorf("missing account ID or auth token")
 	}
 
 	accountID, err := strconv.ParseInt(accountIDStr, 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid account ID: %v", err)
+		return nil, fmt.Errorf("invalid account ID: %v", err)
 	}
 
 	contractId := os.Getenv("PROJECTX_CON_ID")
 	payload := orderPayload{
-		AccountID:  accountID,
-		ContractId: &contractId,
-		Type:       &order.Type,
-		Side:       &order.Side,
-		Size:       &order.Qty,
-		CustomTag:  &order.CustomTag,
+		AccountID:     accountID,
+		ContractId:    &contractId,
+		Type:          &order.Type,
+		Side:          &order.Side,
+		Size:          &order.Qty,
+		CustomTag:     &order.CustomTag,
+		LinkedOrderID: order.LinkedOrderID,
+	}
+	if order.Type != 2 {
+		payload.LimitPrice = order.TargetPrice
+		payload.StopPrice = order.StopPrice
 	}
 
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequest("POST", "https://api.topstepx.com/api/Order/place", bytes.NewBuffer(body))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("order rejected: %s", resp.Status)
-	}
-
-	return nil
-}
-
-func SubmitAndReturnID(order types.Order) int {
-	url := "https://api.topstepx.com/api/Order/place"
-	accountIDStr := os.Getenv("PROJECTX_ACCOUNT_ID")
-	if accountIDStr == "" {
-		log.Println("missing account ID")
-		return 0
-	}
-
-	accountID, err := strconv.ParseInt(accountIDStr, 10, 64)
-	if err != nil {
-		return 0
-	}
-	contractId := os.Getenv("PROJECTX_CON_ID")
-	payload := orderPayload{
-		AccountID:  accountID,
-		ContractId: &contractId,
-		Type:       &order.Type,
-		Side:       &order.Side,
-		Size:       &order.Qty,
-		CustomTag:  &order.CustomTag,
-	}
-
-	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("PROJECTX_SESSION_TOKEN"))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "text/plain")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Printf("order error: %v", err)
-		return 0
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		respBody, _ := ioutil.ReadAll(res.Body)
-		log.Printf("order failed: %s", respBody)
-		return 0
+		return nil, fmt.Errorf("order rejected: %s", resp.Status)
 	}
 
 	var parsed placeOrderResponse
-	decoder := json.NewDecoder(res.Body)
+	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&parsed)
 	if err != nil || !parsed.Success {
-		log.Printf("decode error: %v, success: %v", err, parsed.Success)
-		return 0
+		return nil, err
 	}
 
-	return parsed.OrderID
+	return &parsed.OrderID, nil
 }
 
 func CancelOrder(orderID int) {
