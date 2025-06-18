@@ -67,7 +67,7 @@ func main() {
 
 			var stopOrderId, targetOrderId *int
 			// submit attached stop-loss if defined
-			if order.StopPrice != nil {
+			if order.StopPrice != nil && mainOrderId != nil {
 				if *order.StopPrice > 0 {
 					stopOrder := types.Order{
 						Side:          1, // SELL
@@ -79,14 +79,15 @@ func main() {
 					}
 					stopOrderId, err = execution.SubmitOrder(stopOrder)
 					if err != nil {
-						fmt.Printf("Failed to submit target order: %v", err)
+						fmt.Printf("\nFailed to submit target order: %v\n", err)
+					} else if stopOrderId != nil {
+						stopOrder.ID = *stopOrderId
 					}
-					stopOrder.ID = *stopOrderId
 				}
 			}
 
 			// submit attached take-profit if defined
-			if order.TargetPrice != nil {
+			if order.TargetPrice != nil && mainOrderId != nil {
 				if *order.TargetPrice > 0 {
 					targetOrder := types.Order{
 						Side:          1, // SELL
@@ -98,9 +99,10 @@ func main() {
 					}
 					targetOrderId, err = execution.SubmitOrder(targetOrder)
 					if err != nil {
-						fmt.Printf("Failed to submit target order: %v", err)
+						fmt.Printf("\nFailed to submit stop order: %v\n", err)
+					} else if targetOrderId != nil {
+						targetOrder.ID = *targetOrderId
 					}
-					targetOrder.ID = *targetOrderId
 				}
 			}
 
@@ -108,10 +110,10 @@ func main() {
 			go func() {
 				filled := execution.WaitForFill(order)
 				if filled != nil {
-					if *stopOrderId > 0 {
+					if stopOrderId != nil && *stopOrderId > 0 {
 						execution.CancelOrder(*stopOrderId)
 					}
-					if *targetOrderId > 0 {
+					if targetOrderId != nil && *targetOrderId > 0 {
 						execution.CancelOrder(*targetOrderId)
 					}
 				}

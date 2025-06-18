@@ -168,6 +168,7 @@ func ConnectToUserHub() {
 		signalr.WithConnection(conn),
 		signalr.TransferFormat(signalr.TransferFormatText),
 		signalr.WithReceiver(receiver),
+		signalr.Logger(signalrNoOpLogger{}, false),
 	)
 	if err != nil {
 		log.Fatalf("failed to create user hub client: %v", err)

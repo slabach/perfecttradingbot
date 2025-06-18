@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -82,12 +83,23 @@ func SubmitOrder(order types.Order) (*int, error) {
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("order rejected: %s", resp.Status)
 	}
+	respBody, err := io.ReadAll(resp.Body)
+	log.Printf("Order response: %s", string(respBody))
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %v", err)
+	}
+	if len(respBody) == 0 {
+		return nil, fmt.Errorf("empty response from server (EOF)")
+	}
 
 	var parsed placeOrderResponse
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&parsed)
-	if err != nil || !parsed.Success {
+	err = json.Unmarshal(respBody, &parsed)
+	if err != nil {
 		return nil, err
+	}
+
+	if !parsed.Success {
+		return nil, fmt.Errorf("order rejected: code=%d message=%s", parsed.ErrorCode, parsed.ErrorMessage)
 	}
 
 	return &parsed.OrderID, nil
