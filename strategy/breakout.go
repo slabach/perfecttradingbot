@@ -1,8 +1,8 @@
 package strategy
 
 import (
+	"github.com/perfecttradingbot/types"
 	"math"
-	"perfectTradingBot/types"
 	"time"
 )
 

@@ -3,8 +3,8 @@ package marketdata
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/perfecttradingbot/types"
 	"os"
-	"perfectTradingBot/types"
 	"strconv"
 	"time"
 )

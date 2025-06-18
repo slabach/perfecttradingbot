@@ -1,7 +1,7 @@
 package marketdata
 
 import (
-	"perfectTradingBot/types"
+	"github.com/perfecttradingbot/types"
 	_ "time"
 )
 

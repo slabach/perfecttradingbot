@@ -1,6 +1,6 @@
 package strategy
 
-import "perfectTradingBot/types"
+import "github.com/perfecttradingbot/types"
 
 type Strategy interface {
 	ShouldTrade(tick types.TickData) bool

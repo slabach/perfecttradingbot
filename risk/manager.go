@@ -3,7 +3,7 @@ package risk
 import (
 	"log"
 	//"perfectTradingBot/execution"
-	"perfectTradingBot/types"
+	"github.com/perfecttradingbot/types"
 	"sync"
 	"time"
 )

@@ -4,14 +4,14 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
+	"github.com/perfecttradingbot/auth"
+	"github.com/perfecttradingbot/execution"
+	"github.com/perfecttradingbot/marketdata"
+	"github.com/perfecttradingbot/risk"
+	"github.com/perfecttradingbot/strategy"
+	"github.com/perfecttradingbot/types"
 	"log"
 	"os"
-	"perfectTradingBot/auth"
-	"perfectTradingBot/execution"
-	"perfectTradingBot/marketdata"
-	"perfectTradingBot/risk"
-	"perfectTradingBot/strategy"
-	"perfectTradingBot/types"
 )
 
 func init() {
